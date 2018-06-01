@@ -702,7 +702,9 @@ AC_ARG_VAR([MAVEN_HOME], [looks for mvn at MAVEN_HOME/bin/mvn])
 
 AC_ARG_VAR([PROTOBUF_JAR], [full path to protobuf jar on prefixed builds])
 
-AC_ARG_VAR([PYTHON], [which Python interpreter to use])
+AC_ARG_VAR([PYTHON], [which Python 2 interpreter to use])
+
+AC_ARG_VAR([PYTHON_3], [which Python 3 interpreter to use])
 
 AC_ARG_VAR([TEST_DRIVER], [executable and arguments of a test driver])
 
@@ -2279,6 +2281,46 @@ if test "x$enable_python" = "xyes" || \
     # PYTHON nor PYTHON_VERSION have been set, we do it.
     AM_PATH_PYTHON()
   fi
+
+  # The bindings require python 2 and the new CLI will require python 3.
+  # To solve this issue, we set a variable PYTHON_3.
+  # Depending on the flags given, it is possible to build Mesos with
+  # only Python 2 or Python 3 installed but building the bindings
+  # and the CLI requires to have both.
+  AM_PYTHON_CHECK_VERSION([$PYTHON], [3.0], [
+    # Python 3 is here by default. Let's find if python2 exists.
+    AC_SUBST([PYTHON_3], [$PYTHON])
+    PYTHON_3_VERSION=`$PYTHON_3 -c 'import sys; print(sys.version[[0:3]])'`
+
+    AC_CHECK_PROG([PYTHON2_CHECK], [python2], [yes])
+    AS_IF([test "x$PYTHON2_CHECK" = "xyes"], [
+      # We set again both variables as they are currently set for Python 3.
+      AC_SUBST([PYTHON], [python2])
+      PYTHON_VERSION=`$PYTHON -c 'import sys; print sys.version[[0:3]]'`
+    ], [
+      # python2 doesn't exist, check if we need it.
+      if test "x$enable_python" = "xyes" || \
+         test "x$enable_new_cli" = "xyes"; then
+        AC_MSG_ERROR([Cannot find python2
+-------------------------------------------------------------------
+The Python bindings and CLI requires python 2 to be installed and
+available using the program python or python2.
+-------------------------------------------------------------------
+        ])
+      fi
+    ])
+  ], [
+    if test -n "$PYTHON_3"; then
+      PYTHON_3_PROG=$PYTHON_3
+    else
+      PYTHON_3_PROG=python3
+    fi
+    AC_CHECK_PROG([PYTHON3_CHECK], [$PYTHON_3_PROG], [yes])
+    AS_IF([test "x$PYTHON3_CHECK" = "xyes"], [
+      AC_SUBST([PYTHON_3], [$PYTHON_3_PROG])
+      PYTHON_3_VERSION=`$PYTHON_3 -c 'import sys; print(sys.version[[0:3]])'`
+    ], [])
+  ])
 fi
 
 if test "x$enable_python" = "xyes"; then
