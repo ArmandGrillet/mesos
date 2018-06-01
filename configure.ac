@@ -2271,7 +2271,13 @@ if test "x$enable_python" = "xyes" || \
     if test -n "$PYTHON"; then
       AC_MSG_ERROR([only specify one of PYTHON or PYTHON_VERSION])
     fi
-    PYTHON=python$PYTHON_VERSION
+    AC_SUBST([PYTHON], [python$PYTHON_VERSION])
+  elif test -n "$PYTHON"; then
+    # PYTHON has been set by user, we set PYTHON_VERSION.
+    PYTHON_VERSION=`$PYTHON -c "import sys; sys.stdout.write(sys.version[[:3]])"`
+  else
+    # PYTHON nor PYTHON_VERSION have been set, we do it.
+    AM_PATH_PYTHON()
   fi
 fi
 
