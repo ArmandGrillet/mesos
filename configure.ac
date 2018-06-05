@@ -2335,7 +2335,7 @@ set to an older version of Python.
 -------------------------------------------------------------------
   ])])
 
-  # Next we ensure we have the Python development libraries.
+  # Next we ensure we have the Python development libraries for Python 2.
   AX_PYTHON_DEVEL([>= '2.6'])
 
   # Ensure that we can build a native Python egg linking against a
@@ -2444,7 +2444,7 @@ There are two possible workarounds for this issue:
   $PYTHON -c "import mesos; mesos._mesos" &> /dev/null
 
   if test $? = 0; then
-    pymodulelocation=`python -c \
+    pymodulelocation=`$PYTHON -c \
       "import mesos; import os; print os.path.dirname(mesos.__path__[[0]])" \
       2> /dev/null`
   fi
@@ -2615,7 +2615,7 @@ AS_IF([test "x$enable_new_cli" = "xyes"], [
     AC_MSG_ERROR([Python version too new
 -------------------------------------------------------------------
 The new CLI requires Python version 2.6 or 2.7 in order to build.
-Your Python version is $PYTHON_VERSION.
+Your Python 2 version is $PYTHON_VERSION.
 
 You may wish to set the PYTHON environment variable to an
 appropriate value to assure the right Python executable is found.
