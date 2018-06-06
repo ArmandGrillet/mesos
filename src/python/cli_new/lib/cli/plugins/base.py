@@ -151,7 +151,7 @@ class PluginBase(object):
         cmd = arguments["<command>"]
         argv = arguments["<args>"]
 
-        if cmd in self.COMMANDS.keys():
+        if cmd in list(self.COMMANDS.keys()):
             if "external" not in self.COMMANDS[cmd]:
                 argument_format, short_help, long_help, flag_format = \
                     cli.util.format_subcommands_help(self.COMMANDS[cmd])

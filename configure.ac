@@ -2298,13 +2298,12 @@ if test "x$enable_python" = "xyes" || \
       AC_SUBST([PYTHON], [python2])
       PYTHON_VERSION=`$PYTHON -c 'import sys; print sys.version[[0:3]]'`
     ], [
-      # python2 doesn't exist, check if we need it.
-      if test "x$enable_python" = "xyes" || \
-         test "x$enable_new_cli" = "xyes"; then
+      # python2 doesn't exist, check if we need it due to the bindings.
+      if test "x$enable_python" = "xyes"; then
         AC_MSG_ERROR([Cannot find python2
 -------------------------------------------------------------------
-The Python bindings and CLI requires python 2 to be installed and
-available using the program python or python2.
+The Python bindings requires python 2 to be installed and available
+using the program python or python2.
 -------------------------------------------------------------------
         ])
       fi
@@ -2319,7 +2318,17 @@ available using the program python or python2.
     AS_IF([test "x$PYTHON3_CHECK" = "xyes"], [
       AC_SUBST([PYTHON_3], [$PYTHON_3_PROG])
       PYTHON_3_VERSION=`$PYTHON_3 -c 'import sys; print(sys.version[[0:3]])'`
-    ], [])
+    ], [
+      # python3 doesn't exist, check if we need it due to the CLI.
+      if test "x$enable-new-cli" = "xyes"; then
+        AC_MSG_ERROR([Cannot find python3
+-------------------------------------------------------------------
+The Python CLI requires python 3 to be installed and available
+using the program python or python3.
+-------------------------------------------------------------------
+        ])
+      fi
+    ])
   ])
 fi
 
@@ -2609,18 +2618,16 @@ correct if you're already doing this.
 fi
 
 AS_IF([test "x$enable_new_cli" = "xyes"], [
-  AM_PATH_PYTHON([2.6])
-
-  AX_COMPARE_VERSION([$PYTHON_VERSION], [gt], [2.7],
-    AC_MSG_ERROR([Python version too new
+  AM_PYTHON_CHECK_VERSION([$PYTHON_3], [3.6],,
+    [AC_MSG_ERROR([The Mesos CLI requires Python >= 3.6
 -------------------------------------------------------------------
-The new CLI requires Python version 2.6 or 2.7 in order to build.
-Your Python 2 version is $PYTHON_VERSION.
+The new CLI requires Python version 3.6 or older in order to build.
+Your Python 3 version is $PYTHON_3_VERSION.
 
 You may wish to set the PYTHON environment variable to an
 appropriate value to assure the right Python executable is found.
 -------------------------------------------------------------------
-  ]))
+  ])])
 
   AC_CHECK_PROG([VIRTUALENV_CHECK], [virtualenv], [yes])
   AS_IF([test "x$VIRTUALENV_CHECK" = "xyes"],, [

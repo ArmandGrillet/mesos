@@ -6,7 +6,7 @@ Make sure you have the following prerequisites
 installed on your system before you begin.
 
 ```
-python 2.6 or 2.7
+python 3.6
 virtualenv
 ```
 

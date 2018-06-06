@@ -105,6 +105,11 @@ option(
   FALSE)
 
 option(
+  PYTHON
+  "The command to use in order to run Python"
+  "python")
+
+option(
   ENABLE_NEW_CLI
   "Build the new CLI instead of the old one."
   FALSE)

@@ -37,6 +37,17 @@ if (ENABLE_NEW_CLI)
     lib/cli/plugins/task/__init__.py
     lib/cli/plugins/task/main.py)
 
+  execute_process(
+    COMMAND ${PYTHON} -c
+      "import sys; print('%d.%d' % (sys.version_info[0], sys.version_info[1]))"
+    OUTPUT_VARIABLE PYTHON_VERSION)
+
+  if (PYTHON_VERSION VERSION_LESS "3.6.0")
+    message(FATAL_ERROR
+    "You must be running python 3.6 in order to continue.\n"
+    "Set the CMake option 'PYTHON' to define which interpretor to use.")
+  endif ()
+
   # We find the hidden imports in the CLI and save them in a file.
   add_custom_command(
     OUTPUT cli_hidden_imports.txt
@@ -52,6 +63,7 @@ if (ENABLE_NEW_CLI)
   add_custom_command(
     OUTPUT .virtualenv/bin/activate
     COMMAND VIRTUALENV_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}/.virtualenv
+      PYTHON=${PYTHON}
       ${CMAKE_CURRENT_SOURCE_DIR}/bootstrap
     DEPENDS bootstrap pip-requirements.txt)
 
@@ -68,7 +80,7 @@ if (ENABLE_NEW_CLI)
     echo \"VERSION = \\\"${PACKAGE_VERSION}\\\"\"                           \
       > ${CMAKE_BINARY_DIR}/src/cli/version.py
     source .virtualenv/bin/activate
-    python -m PyInstaller -p ${CMAKE_CURRENT_SOURCE_DIR}/lib                \
+    ${PYTHON} -m PyInstaller -p ${CMAKE_CURRENT_SOURCE_DIR}/lib             \
       $MESOS_CLI_HIDDEN_IMPORTS --specpath ${CMAKE_BINARY_DIR}/src/cli      \
       --workpath ${CMAKE_BINARY_DIR}/src/cli/work                           \
       --distpath ${CMAKE_BINARY_DIR}/src\ --name mesos --noconfirm --onefile\

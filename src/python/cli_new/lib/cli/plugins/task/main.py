@@ -65,7 +65,7 @@ class Task(PluginBase):
                                .format(addr=master, error=exception))
 
         if len(tasks) == 0:
-            print "There are no tasks running in the cluster."
+            print("There are no tasks running in the cluster.")
             return
 
         try:
@@ -78,4 +78,4 @@ class Task(PluginBase):
             raise CLIException("Unable to build table of tasks: {error}"
                                .format(error=exception))
 
-        print str(table)
+        print(str(table))

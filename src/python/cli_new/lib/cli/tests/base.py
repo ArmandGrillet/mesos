@@ -18,9 +18,9 @@
 Set of classes and helper functions for building unit tests for the Mesos CLI.
 """
 
+import io
 import os
 import shutil
-import StringIO
 import subprocess
 import sys
 import tempfile
@@ -49,7 +49,7 @@ class CLITestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        print "\n{class_name}".format(class_name=cls.__name__)
+        print("\n{class_name}".format(class_name=cls.__name__))
 
     @staticmethod
     def default_mesos_build_dir():
@@ -105,7 +105,7 @@ class Executable(object):
 
         try:
             flags = ["--{key}={value}".format(key=key, value=value)
-                     for key, value in self.flags.iteritems()]
+                     for key, value in self.flags.items()]
 
             if self.shell:
                 cmd = ["/bin/sh", self.executable] + flags
@@ -116,7 +116,7 @@ class Executable(object):
                 cmd,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT)
+                stderr=subprocess.PIPE)
         except Exception as exception:
             raise CLIException("Failed to launch '{executable}': {error}"
                                .format(executable=self.executable,
@@ -137,7 +137,10 @@ class Executable(object):
             return
 
         try:
-            self.proc.kill()
+            self.proc.stdin.close()
+            self.proc.stdout.close()
+            self.proc.stderr.close()
+            self.proc.terminate()
             self.proc.wait()
             self.proc = None
         except Exception as exception:
@@ -180,12 +183,11 @@ class Master(Executable):
             "mesos-{name}.sh".format(name=self.name))
         self.shell = True
 
-    def __del__(self):
-        super(Master, self).__del__()
-
-        if hasattr(self, "flags"):
+    def kill(self):
+        if hasattr(self, "flags") and hasattr(self.flags, "work_dir"):
             shutil.rmtree(self.flags["work_dir"])
 
+        super(Master, self).kill()
         Master.count -= 1
 
 
@@ -233,15 +235,6 @@ class Agent(Executable):
             "mesos-{name}.sh".format(name=self.name))
         self.shell = True
 
-    def __del__(self):
-        super(Agent, self).__del__()
-
-        if hasattr(self, "flags"):
-            shutil.rmtree(self.flags["work_dir"])
-            shutil.rmtree(self.flags["runtime_dir"])
-
-        Agent.count -= 1
-
     # pylint: disable=arguments-differ
     def launch(self, timeout=TIMEOUT):
         """
@@ -274,10 +267,15 @@ class Agent(Executable):
         """
         super(Agent, self).kill()
 
-        if self.proc is None:
-            return
+        if hasattr(self, "flags") and hasattr(self.flags, "work_dir"):
+            shutil.rmtree(self.flags["work_dir"])
+        if hasattr(self, "flags") and hasattr(self.flags, "runtime_dir"):
+            shutil.rmtree(self.flags["runtime_dir"])
 
         try:
+            if self.proc is None:
+                return
+
             # pylint: disable=missing-docstring
             def no_slaves(data):
                 return len(data["slaves"]) == 0
@@ -287,6 +285,8 @@ class Agent(Executable):
             raise CLIException("Could not get '/slaves' endpoint as"
                                " JSON with 0 agents in it: {error}"
                                .format(error=exception))
+        finally:
+            Agent.count -= 1
 
 
 class Task(Executable):
@@ -414,7 +414,7 @@ def capture_output(command, argv, extra_args=None):
         extra_args = {}
 
     stdout = sys.stdout
-    sys.stdout = StringIO.StringIO()
+    sys.stdout = io.StringIO()
 
     try:
         command(argv, **extra_args)

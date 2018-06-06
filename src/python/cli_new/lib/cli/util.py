@@ -118,7 +118,7 @@ def format_commands_help(cmds):
     """
     Helps format plugin commands for display.
     """
-    longest_cmd_name = max(cmds.keys(), key=len)
+    longest_cmd_name = max(list(cmds.keys()), key=len)
 
     help_string = ""
     for cmd in sorted(cmds.keys()):
@@ -148,8 +148,8 @@ def format_subcommands_help(cmd):
     flags["-h --help"] = "Show this screen."
     flag_string = ""
 
-    if len(flags.keys()) != 0:
-        longest_flag_name = max(flags.keys(), key=len)
+    if len(list(flags.keys())) != 0:
+        longest_flag_name = max(list(flags.keys()), key=len)
         for flag in sorted(flags.keys()):
             num_spaces = len(longest_flag_name) - len(flag) + 2
             flag_string += "  %s%s%s\n" % (flag, " " * num_spaces, flags[flag])
@@ -161,10 +161,7 @@ def verify_address_format(address):
     """
     Verify that an address ip and port are correct.
     """
-    # We use 'basestring' as the type of address because it can be
-    # 'str' or 'unicode' depending on the source of the address (e.g.
-    # a config file or a flag). Both types inherit from basestring.
-    if not isinstance(address, basestring):
+    if not isinstance(address, str):
         raise CLIException("The address must be a string")
 
     address_pattern = re.compile(r'[0-9]+(?:\.[0-9]+){3}:[0-9]+')
